@@ -81,8 +81,7 @@ class candidat:
     def __init__(self, size):
         self.size = size
         self.core = []
-        self.score1 = 0
-        self.score2 = 0
+        self.score = 0
         for i in range(size):
             self.core.append(random.randint(0, 255))
 
@@ -90,35 +89,23 @@ class candidat:
     def notation(self, imgRef):
 
         for i in range(self.size):
-            if i < int(self.size / 2):
-                self.score1 += (self.core[i] - imgRef.core[i]) ** 2
-            else:
-                self.score2 += (self.core[i] - imgRef.core[i]) ** 2
-        return self.score1, self.score2
+            self.score += (self.core[i] - imgRef.core[i]) ** 2
+        return self.score
 
     # mix deux candidats et met le resultat dans le candidat appelant
-    def mix(self, base1, base2):
-        self.core = base1.core[0:int(self.size / 2)] + base2.core[int(self.size / 2):]
-        self.score1 = base1.score1
-        self.score2 = base2.score2
+    def mix(self, base1):
+        self.core = base1.core[:]
+        self.score = base1.score
 
     # random chance de muter, la mutation va changer d'un random dans [-span, span] et update automatiquement les scores
     def mutate(self, core, chance, span):
-
+        # print(np.random.binomial(self.size, chance))
         for i in random.sample(range(self.size), k=np.random.binomial(self.size, chance)):
-            if i < int(self.size / 2):
-                self.score1 -= (self.core[i] - core[i]) ** 2
-                r = random.randint(-1 * span, span)
-                self.core[i] += r
-                self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
-                self.score1 += (self.core[i] - core[i]) ** 2
-
-            else:
-                self.score2 -= (self.core[i] - core[i]) ** 2
-                r = random.randint(-1 * span, span)
-                self.core[i] += r
-                self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
-                self.score2 += (self.core[i] - core[i]) ** 2
+            self.score -= (self.core[i] - core[i]) ** 2
+            r = random.randint(-1 * span, span)
+            self.core[i] += r
+            self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
+            self.score += (self.core[i] - core[i]) ** 2
 
 
 # creer un fichier composer du header h, du core c et de la fin t
@@ -132,18 +119,17 @@ def creatFile(name, h, c, t):
 
 # prend une liste de 6 candidats et va mixer les 3 meileurs pour remplacer les 3 pires +(mutation sur les nouveaux)
 def fusion(core, set):
-    set.sort(key=lambda x: x.score1 + x.score2)
-    for i in range(3):
-        set[i + 3].mix(set[i], set[(i + 1) % 3])
-        set[i + 3].mutate(core, 0.001, 40)
+    set.sort(key=lambda x: x.score)
+    set[1].mix(set[0])
+    set[1].mutate(core, 0.00005, 50)
 
 
 # source: l'image source
 # content border: une image de meme taille mais avec le coin haut droite et le coin bas gauche de couleur differents de l'image source
 # (j'avais prevenu que c'etait un peu schlag, va faloir sortir paint)
 # il faut bien que les images soit des .bmp
-source = imBMP("Image/testBigPictures/Source.bmp")
-contentBorder = imBMP("Image/testBigPictures/SourceComp.bmp")
+source = imBMP("Image/IKEA/Source.bmp")
+contentBorder = imBMP("Image/IKEA/SourceC.bmp")
 
 classRoom = []
 
@@ -151,7 +137,7 @@ classRoom = []
 source.dif(contentBorder)
 
 # creation des 6 candidats
-for i in range(6):
+for i in range(2):
     classRoom.append(candidat(source.end - source.start))
     print(classRoom[i].notation(source))
 print()
@@ -163,8 +149,13 @@ while 1:
     fusion(source.core, classRoom)
 
     # print et creer un fichier toutes les kème boucles
-    k = 100
+    k = 1000
     if i % k == 0:
-        creatFile("Image/testBigPictures/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
-        print(i, int((classRoom[0].score1 + classRoom[0].score2) / classRoom[0].size))
+        # creatFile("Image/IKEA/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+        print(i, int(classRoom[0].score / classRoom[0].size))
+        # que une image finale de k-lité:
+        testKli = int(classRoom[0].score / classRoom[0].size)
+        if testKli <= 150:
+            creatFile("Image/IKEA/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+            break
     i += 1
