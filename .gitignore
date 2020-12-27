@@ -131,3 +131,4 @@ gen*
 *.jpeg
 *.mp4
 *.xlsx
+private/
