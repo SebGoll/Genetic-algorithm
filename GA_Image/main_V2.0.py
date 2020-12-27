@@ -1,4 +1,5 @@
 import random
+import numpy as np
 
 
 # imBMP (image bitmap) class qui represente une image d'un fichier bitmap
@@ -103,21 +104,21 @@ class candidat:
 
     # random chance de muter, la mutation va changer d'un random dans [-span, span] et update automatiquement les scores
     def mutate(self, core, chance, span):
-        for i in range(self.size):
-            if random.random() <= chance:
-                if i < int(self.size / 2):
-                    self.score1 -= (self.core[i] - core[i]) ** 2
-                    r = random.randint(-1 * span, span)
-                    self.core[i] += r
-                    self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
-                    self.score1 += (self.core[i] - core[i]) ** 2
 
-                else:
-                    self.score2 -= (self.core[i] - core[i]) ** 2
-                    r = random.randint(-1 * span, span)
-                    self.core[i] += r
-                    self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
-                    self.score2 += (self.core[i] - core[i]) ** 2
+        for i in random.sample(range(self.size), k=np.random.binomial(self.size, chance)):
+            if i < int(self.size / 2):
+                self.score1 -= (self.core[i] - core[i]) ** 2
+                r = random.randint(-1 * span, span)
+                self.core[i] += r
+                self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
+                self.score1 += (self.core[i] - core[i]) ** 2
+
+            else:
+                self.score2 -= (self.core[i] - core[i]) ** 2
+                r = random.randint(-1 * span, span)
+                self.core[i] += r
+                self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
+                self.score2 += (self.core[i] - core[i]) ** 2
 
 
 # creer un fichier composer du header h, du core c et de la fin t
