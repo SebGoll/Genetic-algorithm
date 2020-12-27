@@ -85,6 +85,7 @@ class candidat:
         for i in range(size):
             self.core.append(random.randint(0, 255))
 
+
     # fonction de notation, imgRef est un imgBMP cible et update automatiquement les scores
     def notation(self, imgRef):
 
@@ -121,15 +122,15 @@ def creatFile(name, h, c, t):
 def fusion(core, set):
     set.sort(key=lambda x: x.score)
     set[1].mix(set[0])
-    set[1].mutate(core, 0.00005, 50)
+    set[1].mutate(core, 0.00025, 50)
 
 
 # source: l'image source
 # content border: une image de meme taille mais avec le coin haut droite et le coin bas gauche de couleur differents de l'image source
 # (j'avais prevenu que c'etait un peu schlag, va faloir sortir paint)
 # il faut bien que les images soit des .bmp
-source = imBMP("Image/IKEA/Source.bmp")
-contentBorder = imBMP("Image/IKEA/SourceC.bmp")
+source = imBMP("Image/BigChungus/Source.bmp")
+contentBorder = imBMP("Image/BigChungus/SourceC.bmp")
 
 classRoom = []
 
@@ -151,11 +152,11 @@ while 1:
     # print et creer un fichier toutes les kème boucles
     k = 1000
     if i % k == 0:
-        # creatFile("Image/IKEA/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+        creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
         print(i, int(classRoom[0].score / classRoom[0].size))
         # que une image finale de k-lité:
         testKli = int(classRoom[0].score / classRoom[0].size)
-        if testKli <= 150:
-            creatFile("Image/IKEA/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+        if testKli <= 100:
+        #     creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
             break
     i += 1
