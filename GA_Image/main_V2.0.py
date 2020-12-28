@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import time
 
 
 # imBMP (image bitmap) class qui represente une image d'un fichier bitmap
@@ -85,7 +86,6 @@ class candidat:
         for i in range(size):
             self.core.append(random.randint(0, 255))
 
-
     # fonction de notation, imgRef est un imgBMP cible et update automatiquement les scores
     def notation(self, imgRef):
 
@@ -94,19 +94,22 @@ class candidat:
         return self.score
 
     # mix deux candidats et met le resultat dans le candidat appelant
-    def mix(self, base1):
-        self.core = base1.core[:]
+    def mix(self, base1, mem):
+        for i in mem:
+            self.core[i] = base1.core[i]
         self.score = base1.score
+        return mem
 
     # random chance de muter, la mutation va changer d'un random dans [-span, span] et update automatiquement les scores
     def mutate(self, core, chance, span):
-        # print(np.random.binomial(self.size, chance))
-        for i in random.sample(range(self.size), k=np.random.binomial(self.size, chance)):
+        mem = random.sample(range(self.size), k=np.random.binomial(self.size, chance))
+        for i in mem:
             self.score -= (self.core[i] - core[i]) ** 2
             r = random.randint(-1 * span, span)
             self.core[i] += r
             self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
             self.score += (self.core[i] - core[i]) ** 2
+        return mem
 
 
 # creer un fichier composer du header h, du core c et de la fin t
@@ -119,44 +122,56 @@ def creatFile(name, h, c, t):
 
 
 # prend une liste de 6 candidats et va mixer les 3 meileurs pour remplacer les 3 pires +(mutation sur les nouveaux)
-def fusion(core, set):
+def fusion(core, set, mem):
     set.sort(key=lambda x: x.score)
-    set[1].mix(set[0])
-    set[1].mutate(core, 0.00025, 50)
 
+    set[1].mix(set[0], mem)
+
+    mem = set[1].mutate(core, 0.00007, 40)
+
+    return mem
+
+start=time.time()
 
 # source: l'image source
 # content border: une image de meme taille mais avec le coin haut droite et le coin bas gauche de couleur differents de l'image source
 # (j'avais prevenu que c'etait un peu schlag, va faloir sortir paint)
 # il faut bien que les images soit des .bmp
-source = imBMP("Image/BigChungus/Source.bmp")
-contentBorder = imBMP("Image/BigChungus/SourceC.bmp")
-
-classRoom = []
+source = imBMP("Image/Juan/Source.bmp")
+contentBorder = imBMP("Image/Juan/SourceC.bmp")
 
 # appel a dif, permet d'initialiser toutes les données de l'image source
 source.dif(contentBorder)
 
+
 # creation des 6 candidats
+classRoom = []
 for i in range(2):
     classRoom.append(candidat(source.end - source.start))
     print(classRoom[i].notation(source))
 print()
+classRoom.sort(key=lambda x: x.score)
+classRoom[1].core = classRoom[0].core.copy()
+
 
 # boucle infini
+#changeListMemory est une memoir des indices changés entre deux iterations, ça permet de "copier" le meilleur des
+#deux sans avoir besoin de faire une copie complète
 i = 0
+changeListMemory = []
 while 1:
     # ntation et fusion des candidats
-    fusion(source.core, classRoom)
+    changeListMemory = fusion(source.core, classRoom, changeListMemory)
 
     # print et creer un fichier toutes les kème boucles
     k = 1000
     if i % k == 0:
-        creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+        creatFile("Image/Juan/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
         print(i, int(classRoom[0].score / classRoom[0].size))
         # que une image finale de k-lité:
         testKli = int(classRoom[0].score / classRoom[0].size)
         if testKli <= 100:
-        #     creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
+            #     creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
             break
     i += 1
+print(time.time()-start)
