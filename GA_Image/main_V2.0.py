@@ -102,13 +102,18 @@ class candidat:
 
     # random chance de muter, la mutation va changer d'un random dans [-span, span] et update automatiquement les scores
     def mutate(self, core, chance, span):
+
         mem = random.sample(range(self.size), k=np.random.binomial(self.size, chance))
+
         for i in mem:
-            self.score -= (self.core[i] - core[i]) ** 2
+            a = (self.core[i] - core[i])
+            self.score -= a * a
             r = random.randint(-1 * span, span)
             self.core[i] += r
             self.core[i] = 0 if self.core[i] < 0 else (255 if self.core[i] > 255 else self.core[i])
-            self.score += (self.core[i] - core[i]) ** 2
+            a = (self.core[i] - core[i])
+            self.score += a * a
+
         return mem
 
 
@@ -128,10 +133,10 @@ def fusion(core, set, mem):
     set[1].mix(set[0], mem)
 
     mem = set[1].mutate(core, 0.00007, 40)
-
     return mem
 
-start=time.time()
+
+start = time.time()
 
 # source: l'image source
 # content border: une image de meme taille mais avec le coin haut droite et le coin bas gauche de couleur differents de l'image source
@@ -143,7 +148,6 @@ contentBorder = imBMP("Image/Juan/SourceC.bmp")
 # appel a dif, permet d'initialiser toutes les données de l'image source
 source.dif(contentBorder)
 
-
 # creation des 6 candidats
 classRoom = []
 for i in range(2):
@@ -153,25 +157,26 @@ print()
 classRoom.sort(key=lambda x: x.score)
 classRoom[1].core = classRoom[0].core.copy()
 
-
 # boucle infini
-#changeListMemory est une memoir des indices changés entre deux iterations, ça permet de "copier" le meilleur des
-#deux sans avoir besoin de faire une copie complète
+# changeListMemory est une memoir des indices changés entre deux iterations, ça permet de "copier" le meilleur des
+# deux sans avoir besoin de faire une copie complète
 i = 0
 changeListMemory = []
+k = 1000
 while 1:
     # ntation et fusion des candidats
     changeListMemory = fusion(source.core, classRoom, changeListMemory)
 
     # print et creer un fichier toutes les kème boucles
-    k = 1000
+
     if i % k == 0:
         creatFile("Image/Juan/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
         print(i, int(classRoom[0].score / classRoom[0].size))
         # que une image finale de k-lité:
         testKli = int(classRoom[0].score / classRoom[0].size)
-        if testKli <= 100:
+        if testKli <= 500:
             #     creatFile("Image/BigChungus/gen" + str(i) + ".bmp", source.header, classRoom[0].core, source.tail)
             break
     i += 1
-print(time.time()-start)
+
+print(time.time() - start)
